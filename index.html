@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verificación de Certificados | ECAPI</title>
+  <style>
+    body {
+      background-color: #000;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      text-align: center;
+    }
+    .logo {
+      max-width: 150px;
+      margin-bottom: 1rem;
+    }
+    input {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 250px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      background-color: #f15a24;
+      border: none;
+      color: white;
+      cursor: pointer;
+      margin-left: 0.5rem;
+    }
+    .result {
+      margin-top: 2rem;
+    }
+    .card {
+      background-color: #1a1a1a;
+      border: 1px solid #f15a24;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 10px;
+    }
+    a {
+      color: #f15a24;
+    }
+  </style>
+</head>
+<body>
+  <img src="ECAPI__1_-removebg-preview.png" alt="Logo ECAPI" class="logo">
+  <h1>Verificación de Certificados</h1>
+  <p>Ingresa el <strong>nombre completo</strong> del estudiante:</p>
+  <input type="text" id="searchInput" placeholder="Ej: Juan Pérez">
+  <button onclick="searchCertificate()">Verificar</button>
+  <div class="result" id="result"></div>
+
+  <script>
+    async function searchCertificate() {
+      const name = document.getElementById('searchInput').value.trim().toLowerCase();
+      const resultBox = document.getElementById('result');
+      resultBox.innerHTML = 'Buscando...';
+
+      try {
+        const response = await fetch('certificados.csv');
+        const data = await response.text();
+        const rows = data.split('\n').slice(1); // Ignora cabecera
+
+        let found = false;
+
+        for (let row of rows) {
+          const [nombre, curso, fecha, estado, enlace] = row.split(',');
+          if (nombre.trim().toLowerCase() === name) {
+            let contenido = `
+              <div class="card">
+                <h2>${nombre}</h2>
+                <p><strong>Curso:</strong> ${curso}</p>
+                <p><strong>Fecha:</strong> ${fecha}</p>
+                <p><strong>Estado:</strong> ${estado === 'Aprobado' ? '✅ Aprobado' : '❌ Desaprobado'}</p>
+            `;
+            if (estado === 'Aprobado') {
+              contenido += `<p><a href="${enlace}" target="_blank">Ver certificado (PDF)</a></p>`;
+            }
+            contenido += '</div>';
+            resultBox.innerHTML = contenido;
+            found = true;
+            break;
+          }
+        }
+
+        if (!found) {
+          resultBox.innerHTML = '<p>No se encontró ningún certificado con ese nombre.</p>';
+        }
+      } catch (error) {
+        resultBox.innerHTML = '<p>Error al cargar los datos. Asegúrate de tener el archivo certificados.csv en la misma carpeta que este HTML.</p>';
+        console.error('Error leyendo el archivo CSV:', error);
+      }
+    }
+  </script>
+</body>
+</html>
